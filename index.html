@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>YouTube Views</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+	<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+	<h1>Enter YouTube URLs</h1>
+	<p id="current-time"></p>
+<button onclick="recordTime()">Record Time</button>
+<p>Last recorded time: <span id="last-recorded-time"></span></p>
+	<form>
+		<label for="urls">URLs (one per line):</label>
+		<textarea id="urls" name="urls"></textarea>
+		<button type="submit">Get views</button>
+	</form>
+	<div id="results"></div>
+	
+	<script>
+		var timeout = 1000; // 5 seconds
+		
+		$("form").submit(function(e) {
+			e.preventDefault();
+			var urls = $("#urls").val().trim().split(/\s+/);
+			$("#results").empty();
+			
+			urls.forEach(function(url, i) {
+				var videoId = getVideoId(url);
+				var apiUrl = "https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=" + videoId + "&key=AIzaSyAXozlDc4_TyH9vTQTtjrJN8s2sn8KF8ko";
+				
+				$.ajax({
+					url: apiUrl,
+					timeout: timeout,
+					success: function(data) {
+						var views = data.items[0].statistics.viewCount;
+						var subject = data.items[0].snippet.title;
+						$("#results").append("<p><strong>" + subject + ":</strong> " + url + " has <span class='views'>" + views + "</span> views.</p>");
+						updateViewCount(apiUrl, url, subject);
+					},
+					error: function() {
+						$("#results").append("<p>Could not retrieve views data for " + url + ".</p>");
+					}
+				});
+			});
+		});
+		
+		function updateViewCount(apiUrl, url, subject) {
+			setInterval(function() {
+				$.ajax({
+					url: apiUrl,
+					timeout: timeout,
+					success: function(data) {
+						var views = data.items[0].statistics.viewCount;
+						$("p:contains('" + url + "') .views").text(views);
+					},
+					error: function() {
+						$("p:contains('" + url + "') .views").text("N/A");
+					}
+				});
+			}, 5000); // 5 seconds
+		}
+		
+		function getVideoId(url) {
+			var regex = /(?:\/|%3D|v=)([\w-]{11})(?:[%#?&]|$)/;
+			var match = url.match(regex);
+			return (match && match[1]) || false;
+		}
+		function updateTime() {
+  const now = new Date();
+  const currentTime = now.toLocaleTimeString();
+  document.getElementById("current-time").textContent = currentTime;
+}
+
+setInterval(updateTime, 1000); // update the time every second
+
+function recordTime() {
+ const now = new Date();
+  const currentTime = now.toLocaleString(); // format the time as a string
+  
+  // Do something with the current time, such as storing it in a variable or sending it to the server
+}
+
+let lastRecordedTime = ""; // initialize the variable
+
+function recordTime() {
+ const now = new Date();
+  const currentTime = now.toLocaleString(); // format the time as a string
+  
+  lastRecordedTime = currentTime; // store the current time in the variable
+  document.getElementById("last-recorded-time").textContent = lastRecordedTime; // display the time on the webpage
+}
+
+	</script>
+</body>
+</html>
